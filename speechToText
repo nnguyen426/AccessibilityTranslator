@@ -6,7 +6,7 @@ MAX_INT = 32767
 
 SAMPLE_RATE = 16000
 SAMPLE_WIDTH = 2
-BLOCK_SIZE = 48000
+BLOCK_SIZE = 80000
 
 interpreter = speech_recognition.Recognizer()
 
@@ -20,6 +20,6 @@ def print_speech(sound_indata, frames, time, status):
 
 print("Entered speaking mode. Start talking:")
 
-with sounddevice.InputStream(callback = print_speech, channels = 1, samplerate = SAMPLE_RATE, blocksize = 48000):
+with sounddevice.InputStream(callback = print_speech, channels = 1, samplerate = SAMPLE_RATE, blocksize = BLOCK_SIZE):
     while True:
         pass
