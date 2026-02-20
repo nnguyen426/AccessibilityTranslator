@@ -8,12 +8,13 @@ if voices:
 
 while exit == False:
     say=input("type what to say: ")
-    voices = engine.getProperty('voices')
+    
 
     if say == "00001":
         exit = True
         print("exiting")
     else:
-        engine.say(say)
         engine.runAndWait()
+        engine.say(say)
+    
     
