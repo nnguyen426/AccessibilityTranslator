@@ -91,6 +91,14 @@ def translateASL(hand_landmarks, face_landmarks, pose_landmarks):
                 distance(hand_landmarks.landmark[16], face_landmarks.landmark[1]) < 0.2 and \
                 distance(hand_landmarks.landmark[20], face_landmarks.landmark[1]) < 0.2:
             return "food/eat"
+        
+        if distance(hand_landmarks.landmark[3], hand_landmarks.landmark[5]) >= 0.15 and \
+                distance(hand_landmarks.landmark[8], hand_landmarks.landmark[5]) >= 0.2 and \
+                distance(hand_landmarks.landmark[12], hand_landmarks.landmark[9]) <= 0.2 and \
+                distance(hand_landmarks.landmark[16], hand_landmarks.landmark[13]) <= 0.2 and \
+                distance(hand_landmarks.landmark[20], hand_landmarks.landmark[17]) >= 0.2:
+            return "i love you"
+         
 
     if hand_landmarks:
         if hand_landmarks.landmark[8].y < hand_landmarks.landmark[6].y and \
