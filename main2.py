@@ -105,6 +105,38 @@ def translateASL(hand_landmarks, face_landmarks, pose_landmarks):
                 distance(hand_landmarks.landmark[16], face_landmarks.landmark[1]) < 0.2 and \
                 distance(hand_landmarks.landmark[20], face_landmarks.landmark[1]) < 0.2:
             return "food/eat"
+        
+        if distance(hand_landmarks.landmark[3], hand_landmarks.landmark[5]) >= 0.15 and \
+                distance(hand_landmarks.landmark[8], hand_landmarks.landmark[5]) >= 0.2 and \
+                distance(hand_landmarks.landmark[12], hand_landmarks.landmark[9]) <= 0.2 and \
+                distance(hand_landmarks.landmark[16], hand_landmarks.landmark[13]) <= 0.2 and \
+                distance(hand_landmarks.landmark[20], hand_landmarks.landmark[17]) >= 0.2:
+            return "i love you"
+         
+
+    if hand_landmarks:
+        if hand_landmarks.landmark[8].y < hand_landmarks.landmark[6].y and \
+                hand_landmarks.landmark[12].y < hand_landmarks.landmark[10].y and \
+                hand_landmarks.landmark[16].y > hand_landmarks.landmark[14].y and \
+                hand_landmarks.landmark[20].y > hand_landmarks.landmark[18].y and \
+                hand_landmarks.landmark[4].x > hand_landmarks.landmark[3].x:
+            return "peace"
+
+    if hand_landmarks:
+        if hand_landmarks.landmark[4].y < hand_landmarks.landmark[3].y and \
+                hand_landmarks.landmark[8].x > hand_landmarks.landmark[6].x and \
+                hand_landmarks.landmark[12].x > hand_landmarks.landmark[10].x and \
+                hand_landmarks.landmark[16].x > hand_landmarks.landmark[14].x and \
+                hand_landmarks.landmark[20].x > hand_landmarks.landmark[18].x:
+            return "very good"
+
+    if hand_landmarks: 
+        if hand_landmarks.landmark[4].y > hand_landmarks.landmark[3].y and \
+                hand_landmarks.landmark[8].x > hand_landmarks.landmark[6].x and \
+                hand_landmarks.landmark[12].x > hand_landmarks.landmark[10].x and \
+                hand_landmarks.landmark[16].x > hand_landmarks.landmark[14].x and \
+                hand_landmarks.landmark[20].x > hand_landmarks.landmark[18].x:
+            return "very bad"
 
     return ""
 
