@@ -82,18 +82,6 @@ def finger_to_letter_say():
         time.sleep(0.1)
 threading.Thread(target=finger_to_letter_say, daemon=True).start()
     
-
-def finger_to_letter(count):
-    mapping = {
-        0: "raja",
-        1: "has",
-        2: "an",
-        3: "ai",
-        4: "girlfriend",
-        5: "HELLO"
-    }
-    return mapping.get(count, "?")
-
 def distance(point1, point2):
     return np.sqrt((point1.x - point2.x) ** 2 + (point1.y - point2.y) ** 2 + (point1.z - point2.z) ** 2)
 
