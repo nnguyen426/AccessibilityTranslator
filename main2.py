@@ -61,6 +61,16 @@ def count_fingers(hand_landmarks):
 
     return fingers
 
+def finger_to_letter_say(word):
+    print("We are in the function")
+    print(word)
+    engine = pyttsx3.init()
+    voices = engine.getProperty('voices')
+    if voices:
+        engine.setProperty('voice', voices[1].id)
+    engine.say(word)
+    engine.runAndWait()
+
 def finger_to_letter(count):
     mapping = {
         0: "raja",
@@ -152,7 +162,8 @@ with mp_holistic.Holistic(
 
                 # fingers = count_fingers(hand_landmarks)
                 # word = finger_to_letter(fingers)
-
+                
+        finger_to_letter_say(word)
         cv2.putText(image, word, (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
         cv2.imshow('MediaPipe Holistic', image)
