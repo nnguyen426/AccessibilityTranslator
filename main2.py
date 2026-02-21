@@ -46,6 +46,7 @@ def text_to_speech():
     mainloop()
 
 def count_fingers(hand_landmarks):
+    print("hand_landmarks", hand_landmarks)
     tips = [8, 12, 16, 20]
     fingers = 0
 
@@ -71,6 +72,20 @@ def finger_to_letter(count):
     }
     return mapping.get(count, "?")
 
+def distance(point1, point2):
+    return np.sqrt((point1.x - point2.x) ** 2 + (point1.y - point2.y) ** 2 + (point1.z - point2.z) ** 2)
+
+def translateASL(hand_landmarks, face_landmarks, pose_landmarks):
+    if hand_landmarks and face_landmarks:
+        if distance(hand_landmarks.landmark[4], face_landmarks.landmark[1]) < 0.2 and \
+                distance(hand_landmarks.landmark[8], face_landmarks.landmark[1]) < 0.2 and \
+                distance(hand_landmarks.landmark[12], face_landmarks.landmark[1]) < 0.2 and \
+                distance(hand_landmarks.landmark[16], face_landmarks.landmark[1]) < 0.2 and \
+                distance(hand_landmarks.landmark[20], face_landmarks.landmark[1]) < 0.2:
+            return "food/eat"
+
+    return ""
+
 MAX_INT = 32767
 
 SAMPLE_RATE = 16000
@@ -84,7 +99,7 @@ mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 mp_holistic = mp.solutions.holistic
 
-t1 = threading.Thread(target=text_to_speech)
+t1 = threading.Thread(target=text_to_speech, daemon=True)
 t1.start()
 
 cap = cv2.VideoCapture(0)
@@ -93,7 +108,7 @@ with mp_holistic.Holistic(
         min_tracking_confidence=0.5
     ) as holistic, mp_hands.Hands(
         static_image_mode=False,
-        max_num_hands=2,
+        max_num_hands=1,
         min_detection_confidence=0.7,
         min_tracking_confidence=0.7
     ) as hands, sounddevice.InputStream(callback = print_speech, channels = 1, samplerate = SAMPLE_RATE, blocksize = BLOCK_SIZE):
@@ -107,15 +122,6 @@ with mp_holistic.Holistic(
         image = cv2.flip(image, 1)
 
         results_hands = hands.process(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
-
-        letter = ""
-        if results_hands.multi_hand_landmarks:
-            for hand_landmarks in results_hands.multi_hand_landmarks:
-                mp_drawing.draw_landmarks(image, hand_landmarks, mp_hands.HAND_CONNECTIONS)
-                fingers = count_fingers(hand_landmarks)
-                letter = finger_to_letter(fingers)
-
-        cv2.putText(image, letter, (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
         image.flags.writeable = False
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -136,6 +142,18 @@ with mp_holistic.Holistic(
             mp_holistic.POSE_CONNECTIONS,
             landmark_drawing_spec=mp_drawing_styles
             .get_default_pose_landmarks_style())
+        
+        word = ""
+        if results_hands.multi_hand_landmarks:
+            for hand_landmarks in results_hands.multi_hand_landmarks:
+                mp_drawing.draw_landmarks(image, hand_landmarks, mp_hands.HAND_CONNECTIONS)
+
+                word = translateASL(hand_landmarks, results.face_landmarks, results.pose_landmarks)
+
+                # fingers = count_fingers(hand_landmarks)
+                # word = finger_to_letter(fingers)
+
+        cv2.putText(image, word, (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
         cv2.imshow('MediaPipe Holistic', image)
         if cv2.waitKey(5) & 0xFF == 27:
