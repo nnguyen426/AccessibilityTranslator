@@ -1,0 +1,6 @@
+opencv-python>=4.8.0
+mediapipe==0.10.13
+numpy>=1.23.0
+sounddevice>=0.4.6
+SpeechRecognition>=3.10.0
+pyttsx3>=2.90
