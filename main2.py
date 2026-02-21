@@ -100,6 +100,14 @@ def translateASL(hand_landmarks, face_landmarks, pose_landmarks):
                 hand_landmarks.landmark[4].x > hand_landmarks.landmark[3].x:
             return "peace"
 
+    if hand_landmarks:
+        if hand_landmarks.landmark[4].y < hand_landmarks.landmark[3].y and \
+                hand_landmarks.landmark[8].x > hand_landmarks.landmark[6].x and \
+                hand_landmarks.landmark[12].x > hand_landmarks.landmark[10].x and \
+                hand_landmarks.landmark[16].x > hand_landmarks.landmark[14].x and \
+                hand_landmarks.landmark[20].x > hand_landmarks.landmark[18].x:
+            return "very good"
+
     return ""
 
 MAX_INT = 32767
@@ -169,7 +177,7 @@ with mp_holistic.Holistic(
                 # fingers = count_fingers(hand_landmarks)
                 # word = finger_to_letter(fingers)
                 
-        finger_to_letter_say(word)
+        # finger_to_letter_say(word)
         cv2.putText(image, word, (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
         cv2.imshow('MediaPipe Holistic', image)
