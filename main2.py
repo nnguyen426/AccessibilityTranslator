@@ -1,4 +1,5 @@
 import threading
+import time
 import numpy
 import sounddevice
 import speech_recognition
@@ -10,7 +11,9 @@ from tkinter import *
 
 import pyttsx3
 from pyttsx3 import speak
-
+engine = pyttsx3.init()
+current_word = None
+last_spoken_word = ""
 def print_speech(sound_indata, frames, time, status):
     get_audio = speech_recognition.AudioData((sound_indata[:, 0]*MAX_INT).astype(numpy.int16).tobytes(), SAMPLE_RATE, SAMPLE_WIDTH)
     
@@ -61,13 +64,24 @@ def count_fingers(hand_landmarks):
 
     return fingers
 
-def finger_to_letter_say(word):
-    engine = pyttsx3.init()
-    voices = engine.getProperty('voices')
+def finger_to_letter_say():
+    
+    global current_word, last_spoken_word
+    # Initialize inside the thread
+    local_engine = pyttsx3.init()
+    voices = local_engine.getProperty('voices')
     if voices:
-        engine.setProperty('voice', voices[1].id)
-    engine.say(word)
-    engine.runAndWait()
+        local_engine.setProperty('voice', voices[1].id) 
+    
+    while True:
+        if current_word is not None and current_word != last_spoken_word:
+            print(f"Speaking: {current_word}") # Debug print
+            last_spoken_word = current_word
+            local_engine.say(current_word)
+            local_engine.runAndWait()
+        time.sleep(0.1)
+threading.Thread(target=finger_to_letter_say, daemon=True).start()
+    
 
 def finger_to_letter(count):
     mapping = {
@@ -157,11 +171,16 @@ with mp_holistic.Holistic(
                 mp_drawing.draw_landmarks(image, hand_landmarks, mp_hands.HAND_CONNECTIONS)
 
                 word = translateASL(hand_landmarks, results.face_landmarks, results.pose_landmarks)
-
+        if word != "":
+            if word != last_spoken_word:
+                current_word = word
+                # Note: last_spoken_word will be updated by the speech thread!
+        else:
+            # If no hand is detected, we reset the memory
+            last_spoken_word = "" 
+            current_word = None
                 # fingers = count_fingers(hand_landmarks)
                 # word = finger_to_letter(fingers)
-                
-        finger_to_letter_say(word)
         cv2.putText(image, word, (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
         cv2.imshow('MediaPipe Holistic', image)
