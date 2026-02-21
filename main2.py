@@ -62,8 +62,6 @@ def count_fingers(hand_landmarks):
     return fingers
 
 def finger_to_letter_say(word):
-    print("We are in the function")
-    print(word)
     engine = pyttsx3.init()
     voices = engine.getProperty('voices')
     if voices:
