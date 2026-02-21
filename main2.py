@@ -112,6 +112,13 @@ def translateASL(hand_landmarks, face_landmarks, pose_landmarks):
                 distance(hand_landmarks.landmark[16], hand_landmarks.landmark[13]) <= 0.2 and \
                 distance(hand_landmarks.landmark[20], hand_landmarks.landmark[17]) >= 0.2:
             return "i love you"
+        
+        if distance(hand_landmarks.landmark[4], hand_landmarks.landmark[8]) < 0.05 and \
+                distance(hand_landmarks.landmark[12], hand_landmarks.landmark[9]) > 0.05 and \
+                distance(hand_landmarks.landmark[16], hand_landmarks.landmark[13]) > 0.05 and \
+                distance(hand_landmarks.landmark[20], hand_landmarks.landmark[17]) > 0.05:
+            return "OK"
+
          
 
     if hand_landmarks:
