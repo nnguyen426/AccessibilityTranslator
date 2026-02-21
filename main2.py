@@ -100,6 +100,14 @@ def translateASL(hand_landmarks, face_landmarks, pose_landmarks):
             return "i love you"
          
 
+    if hand_landmarks:
+        if hand_landmarks.landmark[8].y < hand_landmarks.landmark[6].y and \
+                hand_landmarks.landmark[12].y < hand_landmarks.landmark[10].y and \
+                hand_landmarks.landmark[16].y > hand_landmarks.landmark[14].y and \
+                hand_landmarks.landmark[20].y > hand_landmarks.landmark[18].y and \
+                hand_landmarks.landmark[4].x > hand_landmarks.landmark[3].x:
+            return "peace"
+
     return ""
 
 MAX_INT = 32767
