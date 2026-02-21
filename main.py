@@ -1,12 +1,19 @@
 import threading
+import time
 import numpy
 import sounddevice
 import speech_recognition
 import cv2
 import mediapipe as mp
 import numpy as np
-import pyttsx3
 
+from tkinter import *
+
+import pyttsx3
+from pyttsx3 import speak
+engine = pyttsx3.init()
+current_word = None
+last_spoken_word = ""
 def print_speech(sound_indata, frames, time, status):
     get_audio = speech_recognition.AudioData((sound_indata[:, 0]*MAX_INT).astype(numpy.int16).tobytes(), SAMPLE_RATE, SAMPLE_WIDTH)
     
@@ -19,22 +26,30 @@ def print_speech(sound_indata, frames, time, status):
 print("Entered speaking mode. Start talking:")
 
 def text_to_speech():
+    window = Tk()
+    window.title("Speech Box")
+
+    text_box = Entry(window, width = 70)
+    text_box.pack()
+    text_box.focus_set()
+
     engine = pyttsx3.init()
-    exit = False
-    voices =engine.getProperty('voices')
+    voices = engine.getProperty('voices')
+
     if voices:
         engine.setProperty('voice', voices[1].id)
 
-    while exit == False:
-        say=input("type what to say!!!!: ")
-        if say == "01":
-            exit = True
-            print("exiting")
-        else:
-            engine.runAndWait()
-            engine.say(say)
+    def text_to_speech():
+        engine.say(text_box.get())
+        engine.runAndWait()
+
+    speak_button = Button(window, text = "Speak", width = 20, height = 2, command = text_to_speech)
+    speak_button.pack()
+
+    mainloop()
 
 def count_fingers(hand_landmarks):
+    print("hand_landmarks", hand_landmarks)
     tips = [8, 12, 16, 20]
     fingers = 0
 
@@ -49,16 +64,76 @@ def count_fingers(hand_landmarks):
 
     return fingers
 
-def finger_to_letter(count):
-    mapping = {
-        0: "raja",
-        1: "has",
-        2: "an",
-        3: "ai",
-        4: "girlfriend",
-        5: "HELLO"
-    }
-    return mapping.get(count, "?")
+def finger_to_letter_say():
+    
+    global current_word, last_spoken_word
+    # Initialize inside the thread
+    local_engine = pyttsx3.init()
+    voices = local_engine.getProperty('voices')
+    if voices:
+        local_engine.setProperty('voice', voices[1].id) 
+    
+    while True:
+        if current_word is not None and current_word != last_spoken_word:
+            print(f"Speaking: {current_word}") # Debug print
+            last_spoken_word = current_word
+            local_engine.say(current_word)
+            local_engine.runAndWait()
+        time.sleep(0.1)
+threading.Thread(target=finger_to_letter_say, daemon=True).start()
+    
+def distance(point1, point2):
+    return np.sqrt((point1.x - point2.x) ** 2 + (point1.y - point2.y) ** 2 + (point1.z - point2.z) ** 2)
+
+def translateASL(hand_landmarks, face_landmarks, pose_landmarks):
+    if hand_landmarks and face_landmarks:
+        if distance(hand_landmarks.landmark[4], face_landmarks.landmark[1]) < 0.2 and \
+                distance(hand_landmarks.landmark[8], face_landmarks.landmark[1]) < 0.2 and \
+                distance(hand_landmarks.landmark[12], face_landmarks.landmark[1]) < 0.2 and \
+                distance(hand_landmarks.landmark[16], face_landmarks.landmark[1]) < 0.2 and \
+                distance(hand_landmarks.landmark[20], face_landmarks.landmark[1]) < 0.2:
+            return "food/eat"
+        
+        if distance(hand_landmarks.landmark[3], hand_landmarks.landmark[5]) >= 0.15 and \
+                distance(hand_landmarks.landmark[8], hand_landmarks.landmark[5]) >= 0.2 and \
+                distance(hand_landmarks.landmark[12], hand_landmarks.landmark[9]) <= 0.2 and \
+                distance(hand_landmarks.landmark[16], hand_landmarks.landmark[13]) <= 0.2 and \
+                distance(hand_landmarks.landmark[20], hand_landmarks.landmark[17]) >= 0.2:
+            return "i love you"
+        
+        if distance(hand_landmarks.landmark[4], hand_landmarks.landmark[8]) < 0.05 and \
+                distance(hand_landmarks.landmark[12], hand_landmarks.landmark[9]) > 0.05 and \
+                distance(hand_landmarks.landmark[16], hand_landmarks.landmark[13]) > 0.05 and \
+                distance(hand_landmarks.landmark[20], hand_landmarks.landmark[17]) > 0.05:
+            return "OK"
+
+         
+
+    if hand_landmarks:
+        if hand_landmarks.landmark[8].y < hand_landmarks.landmark[6].y and \
+                hand_landmarks.landmark[12].y < hand_landmarks.landmark[10].y and \
+                hand_landmarks.landmark[16].y > hand_landmarks.landmark[14].y and \
+                hand_landmarks.landmark[20].y > hand_landmarks.landmark[18].y and \
+                hand_landmarks.landmark[4].x > hand_landmarks.landmark[3].x:
+            return "peace"
+
+    if hand_landmarks:
+        if hand_landmarks.landmark[4].y < hand_landmarks.landmark[3].y and \
+                hand_landmarks.landmark[8].x > hand_landmarks.landmark[6].x and \
+                hand_landmarks.landmark[12].x > hand_landmarks.landmark[10].x and \
+                hand_landmarks.landmark[16].x > hand_landmarks.landmark[14].x and \
+                hand_landmarks.landmark[20].x > hand_landmarks.landmark[18].x:
+            return "very good"
+
+    if hand_landmarks: 
+        if hand_landmarks.landmark[4].y > hand_landmarks.landmark[3].y and \
+                hand_landmarks.landmark[8].x > hand_landmarks.landmark[6].x and \
+                hand_landmarks.landmark[12].x > hand_landmarks.landmark[10].x and \
+                hand_landmarks.landmark[16].x > hand_landmarks.landmark[14].x and \
+                hand_landmarks.landmark[20].x > hand_landmarks.landmark[18].x:
+            return "very bad"
+
+    return ""
 
 MAX_INT = 32767
 
@@ -73,7 +148,7 @@ mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 mp_holistic = mp.solutions.holistic
 
-t1 = threading.Thread(target=text_to_speech)
+t1 = threading.Thread(target=text_to_speech, daemon=True)
 t1.start()
 
 cap = cv2.VideoCapture(0)
@@ -82,7 +157,7 @@ with mp_holistic.Holistic(
         min_tracking_confidence=0.5
     ) as holistic, mp_hands.Hands(
         static_image_mode=False,
-        max_num_hands=2,
+        max_num_hands=1,
         min_detection_confidence=0.7,
         min_tracking_confidence=0.7
     ) as hands, sounddevice.InputStream(callback = print_speech, channels = 1, samplerate = SAMPLE_RATE, blocksize = BLOCK_SIZE):
@@ -96,15 +171,6 @@ with mp_holistic.Holistic(
         image = cv2.flip(image, 1)
 
         results_hands = hands.process(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
-
-        letter = ""
-        if results_hands.multi_hand_landmarks:
-            for hand_landmarks in results_hands.multi_hand_landmarks:
-                mp_drawing.draw_landmarks(image, hand_landmarks, mp_hands.HAND_CONNECTIONS)
-                fingers = count_fingers(hand_landmarks)
-                letter = finger_to_letter(fingers)
-
-        cv2.putText(image, letter, (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
         image.flags.writeable = False
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -125,6 +191,24 @@ with mp_holistic.Holistic(
             mp_holistic.POSE_CONNECTIONS,
             landmark_drawing_spec=mp_drawing_styles
             .get_default_pose_landmarks_style())
+        
+        word = ""
+        if results_hands.multi_hand_landmarks:
+            for hand_landmarks in results_hands.multi_hand_landmarks:
+                mp_drawing.draw_landmarks(image, hand_landmarks, mp_hands.HAND_CONNECTIONS)
+
+                word = translateASL(hand_landmarks, results.face_landmarks, results.pose_landmarks)
+        if word != "":
+            if word != last_spoken_word:
+                current_word = word
+                # Note: last_spoken_word will be updated by the speech thread!
+        else:
+            # If no hand is detected, we reset the memory
+            last_spoken_word = "" 
+            current_word = None
+                # fingers = count_fingers(hand_landmarks)
+                # word = finger_to_letter(fingers)
+        cv2.putText(image, word, (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
         cv2.imshow('MediaPipe Holistic', image)
         if cv2.waitKey(5) & 0xFF == 27:
